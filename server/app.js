@@ -3,7 +3,7 @@ app = express(),
 socketio = require('socket.io'),
 server = app.listen(3000),
 io = socketio.listen(server),
-request = require('request');
+$ = require('jquery');
         
 app.use(express.static(__dirname + '/../client'));
 
@@ -13,18 +13,40 @@ function ebayAPI (apiKey) {
     var key = apiKey;
     
     // Find by keywords
-    this.findByKeywords = function (keywords, callback) {
-        var url = "http://svcs.ebay.com/services/search/FindingService/v1";
-        url += "?OPERATION-NAME=findItemsByKeywords";
-        url += "&SERVICE-VERSION=1.0.0";
-        url += "&SECURITY-APPNAME=" + key;
-        url += "&GLOBAL-ID=EBAY-US";
-        url += "&RESPONSE-DATA-FORMAT=JSON";
-        url += "&REST-PAYLOAD";
-        url += "&keywords=" + keywords;
-        url += "&paginationInput.entriesPerPage=3";
-        
-        request(url, callback);
+    this.advancedSearch = function (keywords, maxPrice, minPrice, callback) {
+        $.ajax({
+            type: "POST",
+            url: 'http://open.api.ebay.com/shopping?callname=FindItemsAdvanced',
+            dataType: "jsonp",
+            jsonp: "callbackname",
+            crossDomain: true,
+            data: {
+                'appid': key,
+                'version': '771',
+                'siteid': '0',
+                'requestencoding': 'JSON',
+                'responseencoding': 'JSON',
+                'QueryKeywords': keywords,
+                'MaxEntries': '3',
+                'PriceMin' : {
+                    'Value' : minPrice, 
+                    'CurrencyID' : 'USD'
+                },
+                'PriceMax' : {
+                    'Value' : maxPrice, 
+                    'CurrencyID' : 'USD'
+                },
+                'callback' : true
+            },
+            success: function(object) {
+                console.log("call success");
+                callback(object.SearchResult[0].ItemArray);
+            },
+            error: function(object,x,errorThrown) {
+                console.log("call failure");
+                callback({});
+            }
+        });
     }
 }
 
@@ -32,20 +54,19 @@ function ebayAPI (apiKey) {
 io.sockets.on('connection', function (socket) {
     
     socket.on('findByKeywords', function (name, fn) {
-        api.findByKeywords('monsters',function (error, response, body) {
+        api.advancedSearch('monsters',function (error, response, body) {
             if (!error && response.statusCode == 200)
                 fn(body);
         });
     });
-    
+
 });
 
 // Tests
 
 var api = new ebayAPI("RocketIn-7272-4720-b383-82b78a2922a3");
 
-api.findByKeywords('monsters',function (error, response, body) {
-    if (!error && response.statusCode == 200)
-        console.log(body)
+api.advancedSearch('monsters', 10, 1, function (error, response, body) {
+    console.log(body)
 });
 
