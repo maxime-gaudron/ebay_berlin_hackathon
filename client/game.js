@@ -1620,8 +1620,11 @@ this.on_animationend = function() {
 if(this.image_index >= this.image_number - 1) {
 with(this) {
 if (sprite_index == puff) {
-	instance_destroy()
-	//alert("DEAD")
+	if (this.hp <= 0) {
+		instance_destroy()
+		killed(this.ebayData)
+	} else {
+	}
 }
 }
 }
@@ -1673,7 +1676,56 @@ probFollow = 0.2
 /***********************************************************************
  * CUSTOM GLOBAL FUNCTIONS
  ***********************************************************************/
-setTimeout(function(){sound_loop(game_music)},500)
+
+
+
+function startAll() {
+sound_loop(game_music);
+if (true) {
+
+
+
+function getZombies()
+    {
+    var xmlHttp = null;
+
+    xmlHttp = new XMLHttpRequest();
+    var person = "cheap";
+    //var person=prompt("What are you looking for ?","");
+
+
+    xmlHttp.open( "GET", "http://192.168.4.157:3000/monsters/" + person, false );
+    xmlHttp.send( );
+    return xmlHttp.responseText;
+    }
+    
+      
+function killedZombie(ebayData) {
+	if (ebayData) {
+		var r=confirm("Do you wanna buy: " + ebayData.name + "\nfor:" + ebayData.price +"\nbefore:"+ebayData.endTime+" ?");
+		if (r)
+			window.location(zombie.url);
+	}
+}
+
+allData = getZombies();
+	var n = allData.length
+	if (n > 10) n = 10;
+	if (n < 3) n = 3;
+	for (var i=0; i<n;i++) {
+		var zb = instance_create( Math.random() * room_width, Math.random() * room_height, zombieA);
+		if (allData.length > i)
+			zb.ebayData = allData[i];
+	}
+
+	
+
+
+}
+}
+
+// game music
+setTimeout(startAll,500)
 
 
 tu_gameloop = tu_loop;
