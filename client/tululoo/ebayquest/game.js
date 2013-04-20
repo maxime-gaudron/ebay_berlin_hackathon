@@ -1418,6 +1418,10 @@ __sprite_init__(this, puff, 32, 32, 16, 16, 'Box', 16, 0, 32, 0, 32, ['img/puff_
 /***********************************************************************
  * MUSICS
  ***********************************************************************/
+function __game_music() { 
+__audio_init__(this, game_music, '', 'aud/Greko Sketch.mp3', 'aud/Greko Sketch.ogg');
+}; var game_music = new __game_music();
+
 
 
 /***********************************************************************
@@ -1516,6 +1520,7 @@ if (!other.dest) {
 
 	guy.pushedto = [ this.x + local__dx * 10, this.y + local__dy * 10, 10 ]
 }
+
 }
 }
 };
@@ -1668,7 +1673,7 @@ probFollow = 0.2
 /***********************************************************************
  * CUSTOM GLOBAL FUNCTIONS
  ***********************************************************************/
-
+setTimeout(function(){sound_loop(game_music)},500)
 
 
 tu_gameloop = tu_loop;
