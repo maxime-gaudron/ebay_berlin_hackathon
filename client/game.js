@@ -1392,6 +1392,18 @@ function __zombie_walk_left() {
 __sprite_init__(this, zombie_walk_left, 46, 36, 23, 18, 'Box', 23, 8, 40, 0, 36, ['img/zombie_walk_left_9.png','img/zombie_walk_left_10.png','img/zombie_walk_left_11.png']);
 }; var zombie_walk_left = new __zombie_walk_left();
 
+function __angry_aura() { 
+__sprite_init__(this, angry_aura, 46, 60, 23, 30, 'Box', 23, 0, 46, 0, 60, ['img/angry_aura_0.png','img/angry_aura_1.png']);
+}; var angry_aura = new __angry_aura();
+
+function __guy_sitting() { 
+__sprite_init__(this, guy_sitting, 48, 36, 24, 18, 'Box', 24, 8, 40, 0, 36, ['img/guy_sitting_0.png']);
+}; var guy_sitting = new __guy_sitting();
+
+function __zombie_udown() { 
+__sprite_init__(this, zombie_udown, 48, 36, 24, 18, 'Box', 24, 8, 40, 0, 36, ['img/zombie_udown_0.png']);
+}; var zombie_udown = new __zombie_udown();
+
 
 
 /***********************************************************************
@@ -1425,47 +1437,52 @@ this.on_step = function() {
 with(this) {
 
 stepinc = 3
-image_speed = 0
-if ( keyboard_check( vk_right )) {
-		x = x + stepinc;
-		sprite_index = guy_walk_right;
+
+if (guy.pushedto) {
+	sprite_index = guy_sitting;
+} else {	
+	image_speed = 0
+	if ( keyboard_check( vk_right )) {
+			x = x + stepinc;
+			sprite_index = guy_walk_right;
+			image_speed = 1
+		}
+
+	// WHEN THE LEFT ARROW IS PUSHED
+	// MOVES THE PLAYER TO THE LEFT
+	if ( keyboard_check( vk_left )) {
+		x = x - stepinc;
+		sprite_index = guy_walk_left;
 		image_speed = 1
 	}
-	
+
+	// WHEN THE UP ARROW IS PUSHED
+	// MOVES THE PLAYER TO UP
+	if ( keyboard_check( vk_up )) {
+		y = y - stepinc;
+		sprite_index = guy_walk_up
+		image_speed = 1
+	}
+
+	// WHEN THE DOWN ARROW IS PUSHED
+	// MOVES THE PLAYER TO DOWN
+	if ( keyboard_check( vk_down )) {
+		 y = y + stepinc;
+		 sprite_index = guy_walk_down;
+		 image_speed = 1
+	}
+
+}
+
 if (x > room_width)
 	x = x - room_width;
-
-// WHEN THE LEFT ARROW IS PUSHED
-// MOVES THE PLAYER TO THE LEFT
-if ( keyboard_check( vk_left )) {
-	x = x - stepinc;
-	sprite_index = guy_walk_left;
-	image_speed = 1
-}
-		
+	
 if (x < 0)
 	x = x + room_width;
 
-
-// WHEN THE UP ARROW IS PUSHED
-// MOVES THE PLAYER TO UP
-if ( keyboard_check( vk_up )) {
-	y = y - stepinc;
-	sprite_index = guy_walk_up
-	image_speed = 1
-}
 if (y < 0)
 	y = y + room_height;
-
-
-// WHEN THE DOWN ARROW IS PUSHED
-// MOVES THE PLAYER TO DOWN
-if ( keyboard_check( vk_down )) {
-	 y = y + stepinc;
-	 sprite_index = guy_walk_down;
-	 image_speed = 1
-}
-
+	
 if (y > room_height)
    y = y - room_height;
 
@@ -1486,13 +1503,12 @@ this.on_collision = function() {
 with(this) {
 this.other = this.place_meeting(this.x, this.y, zombieA);
 if(this.other != null) {
+if (!other.dest) {
+	local__dx = this.x - other.x
+	local__dy = this.y - other.y
 
-local__dx = this.x - other.x
-local__dy = this.y - other.y
-
-
-guy.pushedto = [ this.x + local__dx * 10, this.y + local__dy * 10, 10 ]
-
+	guy.pushedto = [ this.x + local__dx * 10, this.y + local__dy * 10, 10 ]
+}
 }
 }
 };
@@ -1512,30 +1528,29 @@ this.dest = [Math.random() * 10, Math.random() * 10]
 this.on_destroy = on_destroy_i;
 this.on_step = function() {
 with(this) {
-// random movement
-prob = 0.05
-
-if (this.dest) {
-  move_towards_point(this.x + this.dest[0], this.y + this.dest[1], 2);
-  if (Math.random() < prob) {
-	this.dest = [Math.random() * 10, Math.random() * 10]
-	if (Math.random() < prob)
-		this.dest = false;
+if (!this.pushedto) {
+	if (this.dest) {
+	  move_towards_point(this.x + this.dest[0], this.y + this.dest[1], 2);
+	  if (Math.random() < probSteer) {
+		this.dest = [Math.random() * 10, Math.random() * 10]
+		if (Math.random() < probFollow)
+			this.dest = false;
+		}
+	} else {
+	  move_towards_point(guy.x, guy.y, 2)
 	}
-} else {
-  move_towards_point(guy.x, guy.y, 2)
-}
 
-if (Math.abs(x-xprevious) > Math.abs(y-yprevious)) {
-	if (xprevious < x)
-	  sprite_index = zombie_walk_right;
-	if (xprevious > x)
-	  sprite_index = zombie_walk_left;
-} else {
-	if (yprevious < y)
-	  sprite_index = zombie_walk_down;
-	if (yprevious > y)
-	  sprite_index = zombie_walk_up;
+	if (Math.abs(x-xprevious) > Math.abs(y-yprevious)) {
+		if (xprevious < x)
+		  sprite_index = zombie_walk_right;
+		if (xprevious > x)
+		  sprite_index = zombie_walk_left;
+	} else {
+		if (yprevious < y)
+		  sprite_index = zombie_walk_down;
+		if (yprevious > y)
+		  sprite_index = zombie_walk_up;
+	}
 }
 
 if (x > room_width)
@@ -1547,6 +1562,13 @@ if (y < 0)
 if (y > room_height)
     y = y - room_height;
 
+if (this.pushedto) {
+	move_towards_point(this.pushedto[0], this.pushedto[1], this.pushedto[2])
+	this.pushedto[2] = this.pushedto[2] * 0.92
+	if (this.pushedto[2] < 0.1)
+		this.pushedto = false
+	sprite_index = zombie_udown
+}
 }
 };
 this.on_end_step = on_end_step_i;
@@ -1562,12 +1584,31 @@ if (this != other) {
 	other.dest = [ -local__dx, -local__dy]
 }
 }
+this.other = this.place_meeting(this.x, this.y, guy);
+if(this.other != null) {
+if (this.dest) {
+	local__dx = this.x - other.x
+	local__dy = this.y - other.y
+
+	this.pushedto = [ this.x + local__dx * 10, this.y + local__dy * 10, 10 ]
+}
+}
 }
 };
 this.on_roomstart = on_roomstart_i;
 this.on_roomend = on_roomend_i;
 this.on_animationend = on_animationend_i;
-this.on_draw = on_draw_i;
+this.on_draw = function() {
+if (this.visible == 1) {
+__handle_sprite__(this);
+with(this) {
+if (!this.dest) {
+	draw_sprite_ext(angry_aura, this.image_index%2, this.x, this.y, this.image_xscale, this.image_yscale, this.image_angle, this.image_alpha);
+}
+draw_sprite_ext(this.sprite_index, this.image_index, this.x, this.y, this.image_xscale, this.image_yscale, this.image_angle, this.image_alpha);
+}
+}
+};
 }; var zombieA = new __zombieA();
 
 
@@ -1596,7 +1637,8 @@ tu_room_to_go = mainscene;
 /***********************************************************************
  * CUSTOM GLOBAL VARIABLES
  ***********************************************************************/
-
+probSteer = 0.05
+probFollow = 0.2
 
 /***********************************************************************
  * CUSTOM GLOBAL FUNCTIONS
