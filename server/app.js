@@ -14,9 +14,13 @@ function ebayAPI (apiKey) {
     
     // Find by keywords
     this.advancedSearch = function (keywords, maxPrice, minPrice, callback) {
+        
+        //        var url = 'http://open.api.ebay.com/shopping?callname=FindItemsAdvanced';
+        var url = 'http://open.api.sandbox.ebay.com/shopping?callname=FindItemsAdvanced';
+        
         $.ajax({
             type: "POST",
-            url: 'http://open.api.ebay.com/shopping?callname=FindItemsAdvanced',
+            url: url,
             dataType: "jsonp",
             jsonp: "callbackname",
             crossDomain: true,
@@ -36,15 +40,22 @@ function ebayAPI (apiKey) {
                     'Value' : maxPrice, 
                     'CurrencyID' : 'USD'
                 },
+                'itemFilter' : [
+                { 
+                    'name' : 'ListingType',
+                    'value' : 'FixedPrice'
+                }
+                ],
                 'callback' : true
             },
             success: function(object) {
                 console.log("call success");
-                callback(object.SearchResult[0].ItemArray);
+                console.log(object);
+                callback(object.SearchResult[0].ItemArray.Item);
             },
             error: function(object,x,errorThrown) {
                 console.log("call failure");
-                callback({});
+                callback([]);
             }
         });
     }
@@ -64,9 +75,28 @@ io.sockets.on('connection', function (socket) {
 
 // Tests
 
-var api = new ebayAPI("RocketIn-7272-4720-b383-82b78a2922a3");
+// Production
+// var key = "RocketIn-7272-4720-b383-82b78a2922a3";
+// Sandbox
+var key = "RocketIn-63e8-4e8a-8603-40a0978fb82a";
+var api = new ebayAPI(key);
 
-api.advancedSearch('monsters', 10, 1, function (error, response, body) {
-    console.log(body)
+api.advancedSearch('foundation', 10, 1, function (items) {
+    
+    var monsters = new Array();
+    for(key in items) {
+        var monster = {};
+        
+        monster.name = items[key].Title;
+        monster.id = items[key].ItemID;
+        monster.url = items[key].ViewItemURLForNaturalSearch;
+
+        var timeLeft = (new Date(items[key].EndTime) - new Date()) / 1000;
+        monster.hp = Math.round(timeLeft / 3600 / 24 * 2);
+        
+        monsters.push(monster);
+    }
+    
+    console.log(monsters);
 });
 
