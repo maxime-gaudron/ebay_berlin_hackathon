@@ -1,8 +1,6 @@
 var express = require('express'),
 app = express(),
-socketio = require('socket.io'),
 server = app.listen(3000),
-io = socketio.listen(server),
 $ = require('jquery');
         
 app.use(express.static(__dirname + '/../client'));
@@ -31,7 +29,7 @@ function ebayAPI (apiKey) {
                 'requestencoding': 'JSON',
                 'responseencoding': 'JSON',
                 'QueryKeywords': keywords,
-                'MaxEntries': '3',
+                'MaxEntries': '20',
                 'PriceMin' : {
                     'Value' : minPrice, 
                     'CurrencyID' : 'USD'
@@ -60,18 +58,6 @@ function ebayAPI (apiKey) {
     }
 }
 
-// Socket.IO connection
-io.sockets.on('connection', function (socket) {
-    
-    socket.on('findByKeywords', function (name, fn) {
-        api.advancedSearch(name, 10, 1,function (error, response, body) {
-            if (!error && response.statusCode == 200)
-                fn(body);
-        });
-    });
-
-});
-
 // Tests
 
 // Production
@@ -80,19 +66,25 @@ io.sockets.on('connection', function (socket) {
 var key = "RocketIn-63e8-4e8a-8603-40a0978fb82a";
 var api = new ebayAPI(key);
 
-api.advancedSearch('foundation', 10, 1, function (items) {
-    var monsters = new Array();
 
-    for(key in items) {
-        var monster = {};
-        monster.name = items[key].Title;
-        monster.id = items[key].ItemID;
-        monster.url = items[key].ViewItemURLForNaturalSearch;
+app.get('/monsters/:query', function(req, res){
 
-        var timeLeft = (new Date(items[key].EndTime) - new Date()) / 1000;
-        monster.hp = Math.round(timeLeft / 3600 / 24 * 2);
+    api.advancedSearch(req.params.query, 10, 1, function (items) {
+
+        var monsters = new Array();
+
+        for(key in items) {
+            var monster = {};
+            monster.name = items[key].Title;
+            monster.id = items[key].ItemID;
+            monster.url = items[key].ViewItemURLForNaturalSearch;
+
+            var timeLeft = (new Date(items[key].EndTime) - new Date()) / 1000;
+            monster.hp = Math.round(timeLeft / 3600 / 24 * 2);
         
-        monsters.push(monster);
-    }
+            monsters.push(monster);
+        }
+  
+        res.end(JSON.stringify(monsters));
+    });    
 });
-
