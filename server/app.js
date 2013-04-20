@@ -15,7 +15,7 @@ function ebayAPI (apiKey) {
     // Find by keywords
     this.advancedSearch = function (keywords, maxPrice, minPrice, callback) {
         
-        //        var url = 'http://open.api.ebay.com/shopping?callname=FindItemsAdvanced';
+        // var url = 'http://open.api.ebay.com/shopping?callname=FindItemsAdvanced';
         var url = 'http://open.api.sandbox.ebay.com/shopping?callname=FindItemsAdvanced';
         
         $.ajax({
@@ -50,7 +50,6 @@ function ebayAPI (apiKey) {
             },
             success: function(object) {
                 console.log("call success");
-                console.log(object);
                 callback(object.SearchResult[0].ItemArray.Item);
             },
             error: function(object,x,errorThrown) {
@@ -65,7 +64,7 @@ function ebayAPI (apiKey) {
 io.sockets.on('connection', function (socket) {
     
     socket.on('findByKeywords', function (name, fn) {
-        api.advancedSearch('monsters',function (error, response, body) {
+        api.advancedSearch(name, 10, 1,function (error, response, body) {
             if (!error && response.statusCode == 200)
                 fn(body);
         });
@@ -82,11 +81,10 @@ var key = "RocketIn-63e8-4e8a-8603-40a0978fb82a";
 var api = new ebayAPI(key);
 
 api.advancedSearch('foundation', 10, 1, function (items) {
-    
     var monsters = new Array();
+
     for(key in items) {
         var monster = {};
-        
         monster.name = items[key].Title;
         monster.id = items[key].ItemID;
         monster.url = items[key].ViewItemURLForNaturalSearch;
@@ -96,7 +94,5 @@ api.advancedSearch('foundation', 10, 1, function (items) {
         
         monsters.push(monster);
     }
-    
-    console.log(monsters);
 });
 
