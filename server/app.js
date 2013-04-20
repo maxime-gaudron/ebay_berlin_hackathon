@@ -13,8 +13,8 @@ function ebayAPI (apiKey) {
     // Find by keywords
     this.advancedSearch = function (keywords, maxPrice, minPrice, callback) {
         
-        // var url = 'http://open.api.ebay.com/shopping?callname=FindItemsAdvanced';
-        var url = 'http://open.api.sandbox.ebay.com/shopping?callname=FindItemsAdvanced';
+        var url = 'http://open.api.ebay.com/shopping?callname=FindItemsAdvanced';
+        //var url = 'http://open.api.sandbox.ebay.com/shopping?callname=FindItemsAdvanced';
         
         $.ajax({
             type: "POST",
@@ -48,6 +48,7 @@ function ebayAPI (apiKey) {
             },
             success: function(object) {
                 console.log("call success");
+                console.log(object.SearchResult[0].ItemArray.Item);
                 callback(object.SearchResult[0].ItemArray.Item);
             },
             error: function(object,x,errorThrown) {
@@ -61,9 +62,9 @@ function ebayAPI (apiKey) {
 // Tests
 
 // Production
-// var key = "RocketIn-7272-4720-b383-82b78a2922a3";
+var key = "RocketIn-7272-4720-b383-82b78a2922a3";
 // Sandbox
-var key = "RocketIn-63e8-4e8a-8603-40a0978fb82a";
+//var key = "RocketIn-63e8-4e8a-8603-40a0978fb82a";
 var api = new ebayAPI(key);
 
 
@@ -78,9 +79,15 @@ app.get('/monsters/:query', function(req, res){
             monster.name = items[key].Title;
             monster.id = items[key].ItemID;
             monster.url = items[key].ViewItemURLForNaturalSearch;
+            monster.endTime = items[key].EndTime;
+            monster.price = items[key].ConvertedCurrentPrice.value;
+            monster.bidCount = items[key].BidCount;
 
             var timeLeft = (new Date(items[key].EndTime) - new Date()) / 1000;
             monster.hp = Math.round(timeLeft / 3600 / 24 * 2);
+        
+            if (monster.hp < 10)
+                monster.hp = 10;
         
             monsters.push(monster);
         }
