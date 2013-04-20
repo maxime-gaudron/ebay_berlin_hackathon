@@ -1404,6 +1404,10 @@ function __zombie_udown() {
 __sprite_init__(this, zombie_udown, 48, 36, 24, 18, 'Box', 24, 8, 40, 0, 36, ['img/zombie_udown_0.png']);
 }; var zombie_udown = new __zombie_udown();
 
+function __puff() { 
+__sprite_init__(this, puff, 32, 32, 16, 16, 'Box', 16, 0, 32, 0, 32, ['img/puff_3.png','img/puff_2.png','img/puff_1.png','img/puff_0.png']);
+}; var puff = new __puff();
+
 
 
 /***********************************************************************
@@ -1526,12 +1530,14 @@ __instance_init__(this, zombieA, null, 1, 0, zombie_walk_right, 1, 2);
 this.on_creation = function() {
 with(this) {
 this.dest = [Math.random() * 10, Math.random() * 10]
+this.hpmax = 10
+this.hp = this.hpmax
 }
 };
 this.on_destroy = on_destroy_i;
 this.on_step = function() {
 with(this) {
-if (!this.pushedto) {
+if ((!this.pushedto) && this.hp > 0) {
 	if (this.dest) {
 	  move_towards_point(this.x + this.dest[0], this.y + this.dest[1], 2);
 	  if (Math.random() < probSteer) {
@@ -1565,7 +1571,7 @@ if (y < 0)
 if (y > room_height)
     y = y - room_height;
 
-if (this.pushedto) {
+if (this.pushedto && this.hp > 0) {
 	move_towards_point(this.pushedto[0], this.pushedto[1], this.pushedto[2])
 	this.pushedto[2] = this.pushedto[2] * 0.92
 	if (this.pushedto[2] < 0.1)
@@ -1594,13 +1600,27 @@ if (this.dest) {
 	local__dy = this.y - other.y
 
 	this.pushedto = [ this.x + local__dx * 10, this.y + local__dy * 10, 10 ]
+	this.hp = this.hp - 3
+	if (this.hp <= 0) {
+		this.hp = 0
+		sprite_index = puff
+	}
 }
 }
 }
 };
 this.on_roomstart = on_roomstart_i;
 this.on_roomend = on_roomend_i;
-this.on_animationend = on_animationend_i;
+this.on_animationend = function() {
+if(this.image_index >= this.image_number - 1) {
+with(this) {
+if (sprite_index == puff) {
+	instance_destroy()
+	//alert("DEAD")
+}
+}
+}
+};
 this.on_draw = function() {
 if (this.visible == 1) {
 __handle_sprite__(this);
@@ -1609,6 +1629,8 @@ if (!this.dest) {
 	draw_sprite_ext(angry_aura, this.image_index%2, this.x, this.y, this.image_xscale, this.image_yscale, this.image_angle, this.image_alpha);
 }
 draw_sprite_ext(this.sprite_index, this.image_index, this.x, this.y, this.image_xscale, this.image_yscale, this.image_angle, this.image_alpha);
+draw_set_color(0,255,0);
+draw_rectangle(this.x - 16, this.y - 32, this.x - 16 + 32 * (this.hp/this.hpmax), this.y - 30);
 }
 }
 };
